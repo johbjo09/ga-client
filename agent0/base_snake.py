@@ -40,6 +40,8 @@ class BaseSnake(object):
         self.name = None
         self.snake_id = None
         self.watch_link = None
+        self.is_alive = True
+        self.points = 0
 
         self.moves = []
         self.actions = []

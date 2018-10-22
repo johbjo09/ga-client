@@ -24,14 +24,20 @@ def tanh(x):
     negex = np.exp(-x)
     return (ex - negex) / (ex + negex)
 
+def linear(x):
+    return x
+
+def linearprim(x):
+    return 1
+
 def tanhprim(g):
     return 1 - np.power(g, 2)
 
 activations = { 'tanh'    : (tanh, tanhprim),
                 'sigmoid' : (sigmoid, sigmoidprim),
-                'softmax' : (softmax, lambda x: x),
-                'square'  : (square, lambda x: 1),
-                'linear'  : (lambda x: x, lambda x: 1) }
+                'softmax' : (softmax, linear),
+                'square'  : (square, linearprim),
+                'linear'  : (linear, linearprim) }
 class MLP:
     def __init__(self, num_in, eta = 0.1, alpha=0.9, activation="sigmoid", output="sigmoid"):
 
@@ -50,10 +56,14 @@ class MLP:
         self.layers = 0
         
     def _get_random_weights(self, num_in, num_out):
-        # return (np.random.normal(0, 2, num_in + 1))
-        return (np.random.rand(num_in, num_out) - 0.5) * 5
+        # return np.random.normal(0, 2, (num_in, num_out))
+        return (np.random.rand(num_in, num_out) - 0.5)
+        
+    def _get_identity(self, num_in, num_out):
+        pass
+        # return (np.random.rand(num_in, num_out) - 0.5) * 2
 
-    def add_layer(self, num_out):
+    def _add_layer(self, num_out, get_init):
         # Initialize W with gaussians
         num_in = self.num_in
         if len(self.W) > 0:
@@ -61,11 +71,17 @@ class MLP:
             if len(layer_shape) > 1:
                 num_in = layer_shape[1]
 
-        self.W.append(self._get_random_weights(num_in + 1, num_out))
+        self.W.append(get_init(num_in + 1, num_out))
         self.a.append(0)
         self.dW.append(0)
         self.layers += 1
 
+    def add_identity_layer(self, num_out):
+        self._add_layer(self, num_out, self._get_identity)
+
+    def add_layer(self, num_out):
+        self._add_layer(num_out, self._get_random_weights)
+        
     # Add one set of extra inputs as bias
     def _add1(self, v):
         return np.concatenate((v, -np.ones((np.shape(v)[0], 1)) ),axis=1)

@@ -42,6 +42,7 @@ class SimulationController(object):
         global_start_time = time.time()
         with SnakeGameExecutor(self.args) as executor:
             batch = self.initial_batch()
+
             while len(batch) > 0:
                 start_time = time.time()
                 batch_size = len(batch)
@@ -49,16 +50,20 @@ class SimulationController(object):
                 log.info('Running new batch: %d jobs.', batch_size)
                 self.run_counter += batch_size
 
-                results = executor.run_batch(batch)
-                batch, qty_work_prev = self.create_batch_from_results(results)
+                result_generator = executor.run_batch(batch)
 
-                batch_duration = time.time() - start_time
-                log.info('Batch: %d simulations (%g W) in %g sec:'
-                         '\n => %g sim/sec'
-                         '\n => %g W/sec.',
-                         batch_size, qty_work_prev, batch_duration,
-                         batch_size / batch_duration,
-                         qty_work_prev / batch_duration)
+                if result_generator:
+                    batch, qty_work_prev = self.create_batch_from_results(result_generator)
+
+                    batch_duration = time.time() - start_time
+                    log.info('Batch: %d simulations (%g W) in %g sec:'
+                             '\n => %g sim/sec'
+                             '\n => %g W/sec.',
+                             batch_size, qty_work_prev, batch_duration,
+                             batch_size / batch_duration,
+                             qty_work_prev / batch_duration)
+                else:
+                    time.sleep(2)
 
                 if self.execution_stopped:
                     self.training_interrupted()

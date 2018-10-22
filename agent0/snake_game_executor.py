@@ -6,7 +6,7 @@ from client import run_simulation
 class SnakeGameExecutor(object):
     def __init__(self, args):
         self.hpv = args.host, args.port, args.venue
-        self.executor = ProcessPoolExecutor(max_workers=os.cpu_count())
+        self.executor = ProcessPoolExecutor(max_workers=(os.cpu_count()))
 
     def __enter__(self):
         return self
@@ -16,8 +16,5 @@ class SnakeGameExecutor(object):
         return False
 
     def run_batch(self, batch):
-        results = []
         params = [(*self.hpv, snake) for snake in batch]
-        for result in self.executor.map(run_simulation, params):
-            results.append(result)
-        return results
+        return self.executor.map(run_simulation, params)
